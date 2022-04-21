@@ -1,0 +1,57 @@
+#!/usr/bin/env php
+<?php
+
+use FFI\Contracts\Headers\HeaderInterface;
+use FFI\Headers\GLFW3;
+use FFI\Headers\OpenGL;
+use Symfony\Component\Console\Output\ConsoleOutput;
+
+const OUTPUT_DIRECTORY = __DIR__ . '/../resources/';
+
+require __DIR__ . '/../vendor/autoload.php';
+
+/** @var callable():iterable<string, HeaderInterface> $headers */
+$headers = (static function (): iterable {
+    yield 'glfw.win32.h' => GLFW3::create(
+        platform: GLFW3\Platform::WIN32,
+        context: GLFW3\Context::WGL,
+    );
+
+    yield 'glfw.linux.h' => GLFW3::create(
+        platform: GLFW3\Platform::X11,
+        context: GLFW3\Context::GLX,
+    );
+
+    yield 'opengl.win32.h' => OpenGL::create(
+        coreProfile: true,
+        platform: OpenGL\Platform::WGL,
+    );
+
+    yield 'opengl.linux.h' => OpenGL::create(
+        coreProfile: true,
+        platform: OpenGL\Platform::GLX,
+        extensions: [
+            OpenGL\Extension::GLX_ARB_GET_PROC_ADDRESS,
+        ]
+    );
+});
+
+$output = new ConsoleOutput();
+
+foreach ($headers() as $name => $header) {
+    $before = \microtime(true);
+
+    $output->write(' - Building <comment>' . $name . '</comment>: ');
+
+    try {
+        \file_put_contents(OUTPUT_DIRECTORY . $name, (string)$header);
+
+        $result = \number_format(\microtime(true) - $before, 2);
+        $output->writeln('<info>OK</info> [' . $result . 's]');
+    } catch (\Throwable $e) {
+        $output->writeln('<error>FAIL</error>');
+        $output->writeln('<error>' . $e->getMessage() . '</error>');
+    }
+}
+
+$output->writeln("\n<info>Building Completed</info>");
