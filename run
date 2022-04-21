@@ -171,8 +171,9 @@ while (!$glfw->glfwWindowShouldClose($window)) {
 
     $now = microtime(true);
     $delta = $now - $time;
-    if ($delta > 1.0) {
-        $glfw->glfwSetWindowTitle($window, 'FPS ' . $fps);
+    if ($delta > 0.1) {
+        $fps *= 1 / $delta;
+        $glfw->glfwSetWindowTitle($window, 'FPS ' . (int)$fps);
         [$time, $fps] = [$now, 0];
     }
 
