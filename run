@@ -21,43 +21,7 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 
 require __DIR__ . '/app/bootstrap.php';
 
-$gl = Registry::get(GL::class);
-$glfw = Registry::get(GLFW3::class);
-$output = new ConsoleOutput();
-
-// ====================
-const WIDTH  = 640;
-const HEIGHT = 480;
-const MSAA   = 1024;
-const VSYNC  = false;
-// ====================
-
-$glfw->glfwSetErrorCallback(static function (int $code, string $message) use ($output) {
-    $output->writeln(\sprintf('<error>[0x%h] %s</error>', $code, $message));
-});
-
-// glfw: initialize and configure
-// ------------------------------
-$glfw->glfwInit();
-MSAA and $glfw->glfwWindowHint(GLFW3::SAMPLES, MSAA);
-$glfw->glfwWindowHint(GLFW3::CONTEXT_VERSION_MAJOR, 4);
-$glfw->glfwWindowHint(GLFW3::CONTEXT_VERSION_MINOR, 6);
-$glfw->glfwWindowHint(GLFW3::OPENGL_PROFILE, GLFW3::OPENGL_CORE_PROFILE);
-
-PHP_OS_FAMILY === 'Darwin'
-    and $glfw->glfwWindowHint(GLFW3::OPENGL_FORWARD_COMPAT, GLFW3::TRUE);
-
-// glfw window creation
-// --------------------
-$window = $glfw->glfwCreateWindow(WIDTH, HEIGHT, "PHP Rocks!", null, null);
-$glfw->glfwSetFramebufferSizeCallback($window, function (mixed $window, int $width, int $height) use ($gl): void {
-    $gl->glViewport(0, 0, $width, $height);
-});
-$glfw->glfwMakeContextCurrent($window);
-$glfw->glfwSwapInterval((int)VSYNC);
-
-$output->writeln('Renderer: <comment>' . $gl->glGetString(GL::RENDERER) . '</comment>');
-$output->writeln('Version: <comment>' . $gl->glGetString(GL::VERSION) . '</comment>');
+$app = new \App\Application();
 
 // build and compile our shader program
 // ------------------------------------
@@ -81,25 +45,25 @@ $indices = Type::uint32Array([  // note that we start from 0!
 ]);
 
 [$vbo, $vao, $ebo] = [Type::uint32(), Type::uint32(), Type::uint32()];
-$gl->glGenVertexArrays(1, FFI::addr($vao));
-$gl->glGenBuffers(1, FFI::addr($vbo));
-$gl->glGenBuffers(1, FFI::addr($ebo));
+$app->gl->glGenVertexArrays(1, FFI::addr($vao));
+$app->gl->glGenBuffers(1, FFI::addr($vbo));
+$app->gl->glGenBuffers(1, FFI::addr($ebo));
 // bind the Vertex Array Object first, then bind and set vertex buffer(s), and
 // then configure vertex attributes(s).
-$gl->glBindVertexArray($vao->cdata);
+$app->gl->glBindVertexArray($vao->cdata);
 
-$gl->glBindBuffer(GL::ARRAY_BUFFER, $vbo->cdata);
-$gl->glBufferData(GL::ARRAY_BUFFER, FFI::sizeof($vertices), $vertices, GL::STATIC_DRAW);
+$app->gl->glBindBuffer(GL::ARRAY_BUFFER, $vbo->cdata);
+$app->gl->glBufferData(GL::ARRAY_BUFFER, FFI::sizeof($vertices), $vertices, GL::STATIC_DRAW);
 
-$gl->glBindBuffer(GL::ELEMENT_ARRAY_BUFFER, $ebo->cdata);
-$gl->glBufferData(GL::ELEMENT_ARRAY_BUFFER, FFI::sizeof($indices), $indices, GL::STATIC_DRAW);
+$app->gl->glBindBuffer(GL::ELEMENT_ARRAY_BUFFER, $ebo->cdata);
+$app->gl->glBufferData(GL::ELEMENT_ARRAY_BUFFER, FFI::sizeof($indices), $indices, GL::STATIC_DRAW);
 
-$gl->glVertexAttribPointer(0, 3, GL::FLOAT, GL::FALSE, 3 * FFI::sizeof(FFI::type('float')), null);
-$gl->glEnableVertexAttribArray(0);
+$app->gl->glVertexAttribPointer(0, 3, GL::FLOAT, GL::FALSE, 3 * FFI::sizeof(FFI::type('float')), null);
+$app->gl->glEnableVertexAttribArray(0);
 
 // note that this is allowed, the call to glVertexAttribPointer registered VBO
 // as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-$gl->glBindBuffer(GL::ARRAY_BUFFER, 0);
+$app->gl->glBindBuffer(GL::ARRAY_BUFFER, 0);
 
 // remember: do NOT unbind the EBO while a VAO is active as the bound element
 // buffer object IS stored in the VAO; keep the EBO bound.
@@ -109,55 +73,48 @@ $gl->glBindBuffer(GL::ARRAY_BUFFER, 0);
 // this VAO, but this rarely happens. Modifying other
 // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind
 // VAOs (nor VBOs) when it's not directly necessary.
-$gl->glBindVertexArray(0);
+$app->gl->glBindVertexArray(0);
 
-$gl->glPolygonMode(GL::FRONT_AND_BACK, GL::LINE);
+$app->gl->glPolygonMode(GL::FRONT_AND_BACK, GL::LINE);
 
-[$fps, $time] = [0, microtime(true)];
-while (!$glfw->glfwWindowShouldClose($window)) {
-    ++$fps;
-
-    $now = microtime(true);
-    $delta = $now - $time;
-    if ($delta > 0.1) {
-        $fps *= 1 / $delta;
-        $glfw->glfwSetWindowTitle($window, 'FPS ' . (int)$fps);
-        [$time, $fps] = [$now, 0];
+while (!$app->glfw->glfwWindowShouldClose($app->window)) {
+    if ($delta = $app->fps->shouldUpdate(.3)) {
+        $app->glfw->glfwSetWindowTitle($app->window, 'FPS ' . (int)(1 / $delta));
     }
 
     // input
     // -----
-    if ($glfw->glfwGetKey($window, GLFW3::KEY_ESCAPE) === GLFW3::PRESS) {
-        $glfw->glfwSetWindowShouldClose($window, 1);
+    if ($app->glfw->glfwGetKey($app->window, GLFW3::KEY_ESCAPE) === GLFW3::PRESS) {
+        $app->glfw->glfwSetWindowShouldClose($app->window, 1);
     }
 
     // render
     // ------
-    $gl->glClearColor(0.2, 0.3, 0.3, 1.0);
-    $gl->glClear(GL::COLOR_BUFFER_BIT);
+    $app->gl->glClearColor(0.2, 0.3, 0.3, 1.0);
+    $app->gl->glClear(GL::COLOR_BUFFER_BIT);
 
     // draw our first triangle
     $shader->use();
-    $gl->glBindVertexArray($vao->cdata); // seeing as we only have a single VAO
-                                         // there's no need to bind it every time,
-                                         // but we'll do so to keep things a bit
-                                         // more organized
+    $app->gl->glBindVertexArray($vao->cdata); // seeing as we only have a single VAO
+                                              // there's no need to bind it every time,
+                                              // but we'll do so to keep things a bit
+                                              // more organized
     // glDrawArrays(GL_TRIANGLES, 0, 6);
-    $gl->glDrawElements(GL::TRIANGLES, 6, GL::UNSIGNED_INT, null);
+    $app->gl->glDrawElements(GL::TRIANGLES, 6, GL::UNSIGNED_INT, null);
     // glBindVertexArray(0); // no need to unbind it every time
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     // -------------------------------------------------------------------------------
-    $glfw->glfwSwapBuffers($window);
-    $glfw->glfwPollEvents();
+    $app->glfw->glfwSwapBuffers($app->window);
+    $app->glfw->glfwPollEvents();
 }
 
 // optional: de-allocate all resources once they've outlived their purpose:
 // ------------------------------------------------------------------------
-$gl->glDeleteVertexArrays(1, FFI::addr($vao));
-$gl->glDeleteBuffers(1, FFI::addr($vbo));
-$gl->glDeleteBuffers(1, FFI::addr($ebo));
+$app->gl->glDeleteVertexArrays(1, FFI::addr($vao));
+$app->gl->glDeleteBuffers(1, FFI::addr($vbo));
+$app->gl->glDeleteBuffers(1, FFI::addr($ebo));
 
 // glfw: terminate, clearing all previously allocated GLFW resources.
 // ------------------------------------------------------------------
-$glfw->glfwTerminate();
+$app->glfw->glfwTerminate();

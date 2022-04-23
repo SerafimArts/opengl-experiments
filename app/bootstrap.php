@@ -15,8 +15,8 @@ declare(strict_types=1);
 
 use App\Library\GL;
 use App\Library\GLFW3;
-use Dotenv\Dotenv;
 use FFI\Proxy\Registry;
+use Local\Env\Env;
 
 if (!is_file($composer = __DIR__ . '/../vendor/autoload.php')) {
     $message = <<<ERROR
@@ -35,6 +35,12 @@ if (!is_file($composer = __DIR__ . '/../vendor/autoload.php')) {
 $result = require $composer;
 
 // -----------------------------------------------------------------------------
+//  Load Env Variables
+// -----------------------------------------------------------------------------
+
+Env::load(__DIR__ . '/../.env');
+
+// -----------------------------------------------------------------------------
 //  Make sure all headers is compiled
 // -----------------------------------------------------------------------------
 
@@ -50,15 +56,6 @@ if (glob(__DIR__ . '/../resources/headers/*.h') === []) {
 
     fwrite(STDERR, $message);
     exit(1);
-}
-
-// -----------------------------------------------------------------------------
-//  Load Dotenv
-// -----------------------------------------------------------------------------
-
-if (is_file($pathname = __DIR__ . '/../.env')) {
-    $dotenv = Dotenv::createUnsafeImmutable(dirname($pathname), basename($pathname));
-    $dotenv->load();
 }
 
 // -----------------------------------------------------------------------------
