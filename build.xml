@@ -1,0 +1,99 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+
+<project name="bic-engine" basedir="." default="all">
+    <if>
+        <available file=".env" type="file" />
+        <then><property file=".env" /></then>
+        <else>
+            <if>
+                <available file=".env.example" type="file" />
+                <then><property file=".env.example" /></then>
+            </if>
+        </else>
+    </if>
+
+    <property name="DIR_BIN" value="bin" />
+    <property name="DIR_BIN_X64" value="bin/x64" />
+    <property name="DIR_BIN_X86" value="bin/x86" />
+    <php returnProperty="DIR_TEMP" expression="sys_get_temp_dir();" />
+
+    <target name="all">
+        <runtarget target="download" />
+        <runtarget target="compile" />
+    </target>
+
+    <target name="prepare" hidden="true">
+        <echo message="Creating binary directories (${phing.dir}/${DIR_BIN}/*)..." />
+        <mkdir dir="${DIR_BIN_X64}" />
+        <mkdir dir="${DIR_BIN_X86}" />
+    </target>
+
+    <target name="download" depends="prepare" description="Download Binaries">
+        <echo message="Downloading binaries" />
+
+        <property name="LIB_GLFW_VERSION" value="3.3.7" />
+        <echo message="Downloading GLFW v${LIB_GLFW_VERSION} binaries" />
+
+        <if>
+            <os family="windows" />
+            <then><runtarget target="download:win32" /></then>
+        </if>
+
+        <if>
+            <os family="unix" />
+            <then><echo message="Linux binaries downloading not available yet" level="error" /></then>
+        </if>
+
+        <if>
+            <os family="mac" />
+            <then><echo message="MacOS binaries downloading not available yet" level="error" /></then>
+        </if>
+    </target>
+
+    <target name="download:win32" description="Download Binaries (Win32)">
+        <echo message="Downloading Win32 (x64) binaries" />
+
+        <phingcall target="download-archive">
+            <property name="__url" value="https://github.com/glfw/glfw/releases/download/${LIB_GLFW_VERSION}/glfw-${LIB_GLFW_VERSION}.bin.WIN64.zip" />
+            <property name="__name" value="glfw-${LIB_GLFW_VERSION}-win32-x64" />
+        </phingcall>
+
+        <copy file="${DIR_TEMP}/glfw-${LIB_GLFW_VERSION}-win32-x64/glfw-${LIB_GLFW_VERSION}.bin.WIN64/lib-mingw-w64/glfw3.dll"
+              todir="${DIR_BIN_X64}" />
+
+        <echo message="Downloading Win32 (x86) binaries" />
+
+        <phingcall target="download-archive">
+            <property name="__url" value="https://github.com/glfw/glfw/releases/download/${LIB_GLFW_VERSION}/glfw-${LIB_GLFW_VERSION}.bin.WIN32.zip" />
+            <property name="__name" value="glfw-${LIB_GLFW_VERSION}-win32-x86" />
+        </phingcall>
+
+        <copy file="${DIR_TEMP}/glfw-${LIB_GLFW_VERSION}-win32-x86/glfw-${LIB_GLFW_VERSION}.bin.WIN32/lib-mingw/glfw3.dll"
+              todir="${DIR_BIN_X86}" />
+    </target>
+
+    <target name="compile" description="Compile Application (All Platforms)">
+        <echo message="Not implemented yet" />
+    </target>
+
+    <target name="download-archive" hidden="true">
+        <if>
+            <available file="${DIR_TEMP}/${__name}" type="dir" />
+            <then>
+                <echo message="Archive already has been downloaded" level="warning" />
+            </then>
+            <else>
+                <echo message="Downloading archive..." />
+                <httpget dir="${DIR_TEMP}" url="${__url}" filename="${__name}.zip" />
+
+                <echo message="Extracting archive" />
+                <unzip file="${DIR_TEMP}/${__name}.zip"
+                       todir="${DIR_TEMP}/${__name}">
+                    <fileset dir=".">
+                        <include name="*.zip"/>
+                    </fileset>
+                </unzip>
+            </else>
+        </if>
+    </target>
+</project>

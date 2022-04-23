@@ -6,20 +6,26 @@ use FFI\Headers\GLFW3;
 use FFI\Headers\OpenGL;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
-const OUTPUT_DIRECTORY = __DIR__ . '/../resources/';
+const OUTPUT_DIRECTORY = __DIR__ . '/../resources/headers/';
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../app/bootstrap.php';
 
 /** @var callable():iterable<string, HeaderInterface> $headers */
 $headers = (static function (): iterable {
     yield 'glfw.win32.h' => GLFW3::create(
         platform: GLFW3\Platform::WIN32,
         context: GLFW3\Context::WGL,
+        version: GLFW3\Version::create(
+            $_SERVER['LIB_GLFW_VERSION'] ?? GLFW3\Version::LATEST->toString()
+        ),
     );
 
     yield 'glfw.linux.h' => GLFW3::create(
         platform: GLFW3\Platform::X11,
         context: GLFW3\Context::GLX,
+        version: GLFW3\Version::create(
+            $_SERVER['LIB_GLFW_VERSION'] ?? GLFW3\Version::LATEST->toString()
+        ),
     );
 
     yield 'opengl.win32.h' => OpenGL::create(

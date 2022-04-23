@@ -12,14 +12,17 @@ declare(strict_types=1);
 
 use App\Library\GLFW3;
 use App\Library\GL;
+use FFI\Proxy\Registry;
 use FFI\Scalar\Type;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/app/bootstrap.php';
 
-$gl = new GL();
-$glfw = new GLFW3();
+$gl = Registry::get(GL::class);
+$glfw = Registry::get(GLFW3::class);
 $output = new ConsoleOutput();
+
+\App\Kernel\Shader\Vertex::fromPathname(__FILE__);
 
 // ====================
 const WIDTH  = 640;
@@ -109,9 +112,9 @@ $gl->glAttachShader($shaderProgram, $fragmentShader);
 $gl->glLinkProgram($shaderProgram);
 
 // check for linking errors
-$gl->glGetShaderiv($fragmentShader, GL::LINK_STATUS, FFI::addr($success));
+$gl->glGetShaderiv($shaderProgram, GL::LINK_STATUS, FFI::addr($success));
 if (!$success->cdata) {
-    $gl->glGetShaderInfoLog($fragmentShader, 512, null, $message = FFI::new('char[512]'));
+    $gl->glGetShaderInfoLog($shaderProgram, 512, null, $message = FFI::new('char[512]'));
     throw new \LogicException(FFI::string($message));
 }
 

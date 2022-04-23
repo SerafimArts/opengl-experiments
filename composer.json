@@ -6,6 +6,7 @@
         "ffi/proxy": "^1.0",
         "ffi/location": "^1.0",
         "ffi/scalar-utils": "^1.0",
+        "vlucas/phpdotenv": "^5.4",
         "symfony/console": "^5.4|^6.0"
     },
     "autoload": {
@@ -14,8 +15,15 @@
         }
     },
     "require-dev": {
+        "phing/phing": "^3.0",
+        "vimeo/psalm": "^4.22",
         "ffi-headers/glfw3-headers": "^1.0",
         "ffi-headers/opengl-headers": "^1.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "phing/phing-composer-configurator": true
+        }
     },
     "scripts": {
         "app:run": "@php run",

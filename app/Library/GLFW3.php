@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file is part of Cube package.
+ * This file is part of opengl-experiments package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -152,7 +152,7 @@ use FFI\Proxy\Proxy;
  * @method CData glfwGetGLXContext(CData $window)
  * @method int glfwGetGLXWindow(CData $window)
  */
-final class GLFW3 extends Proxy
+final class GLFW3 extends Library
 {
     public const TRUE = 1;
     public const FALSE = 0;
@@ -443,46 +443,4 @@ final class GLFW3 extends Proxy
     public const COCOA_CHDIR_RESOURCES = 0x00051001;
     public const COCOA_MENUBAR = 0x00051002;
     public const DONT_CARE = -1;
-
-    public function __construct()
-    {
-        Runtime::assertAvailable();
-
-        $ffi = \FFI::cdef(\file_get_contents($this->getHeaders()), $this->getBinary());
-
-        parent::__construct($ffi);
-    }
-
-    /**
-     * @return non-empty-string
-     */
-    private function getHeaders(): string
-    {
-        return match (\PHP_OS_FAMILY) {
-            'Windows' => __DIR__ . '/../../resources/glfw.win32.h',
-            'Linux' => __DIR__ . '/../../resources/glfw.linux.h',
-        };
-    }
-
-    /**
-     * @return non-empty-string
-     */
-    private function getBinary(): string
-    {
-        $location = match (\PHP_OS_FAMILY) {
-            'Windows' => match (\PHP_INT_SIZE) {
-                8 => [__DIR__ . '/../../bin/x64/glfw3.dll'],
-                4 => [__DIR__ . '/../../bin/x86/glfw3.dll'],
-                default => throw new \LogicException('Unsupported OS bits'),
-            },
-            'Linux' => ['libglfw.so.3'],
-            default => throw new \LogicException('Unsupported OS'),
-        };
-
-        return Locator::resolve(...$location)
-            ?? throw new \LogicException(\sprintf(
-                'Could not resolve binary pathname (%s)',
-                \implode(', ', $location),
-            ));
-    }
 }

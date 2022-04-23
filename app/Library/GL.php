@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file is part of Cube package.
+ * This file is part of opengl-experiments package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -87,7 +87,7 @@ use FFI\Scalar\Type;
  * @method void glXSelectEvent(CData $dpy, int $draw, int $event_mask)
  * @method callable|CData glXGetProcAddress(CData $name)
  */
-final class GL extends Proxy
+final class GL extends Library
 {
     public const DEPTH_BUFFER_BIT = 0x00000100;
     public const STENCIL_BUFFER_BIT = 0x00000400;
@@ -2453,44 +2453,6 @@ final class GL extends Proxy
     public const FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR = 0x9633;
     public const OVR_multiview2 = 1;
 
-    public function __construct()
-    {
-        Runtime::assertAvailable();
-
-        $ffi = \FFI::cdef(\file_get_contents($this->getHeaders()), $this->getBinary());
-
-        parent::__construct($ffi);
-    }
-
-    /**
-     * @return non-empty-string
-     */
-    private function getHeaders(): string
-    {
-        return match(\PHP_OS_FAMILY) {
-            'Windows' => __DIR__ . '/../../resources/opengl.win32.h',
-            'Linux' => __DIR__ . '/../../resources/opengl.linux.h',
-        };
-    }
-
-    /**
-     * @return non-empty-string
-     */
-    private function getBinary(): string
-    {
-        $location = match(PHP_OS_FAMILY) {
-            'Windows' => ['opengl32.dll'],
-            'Linux' => ['libGL.so.1', 'libGL.so'],
-            default => throw new \LogicException('Unsupported OS'),
-        };
-
-        return Locator::resolve(...$location)
-            ?? throw new \LogicException(\sprintf(
-                'Could not resolve binary pathname(%s)',
-                \implode(', ', $location),
-            ));
-    }
-
     /**
      * @param non-empty-string $method
      * @param array $args
@@ -2764,7 +2726,7 @@ final class GL extends Proxy
 
     public function glGetDoublev(int $pname, CData $data): void
     {
-        $this->ffi->glGetDoublev($pname, ta);
+        $this->ffi->glGetDoublev($pname, $data);
     }
 
     public function glGetFloatv(int $pname, CData $data): void
