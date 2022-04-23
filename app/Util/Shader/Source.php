@@ -9,12 +9,11 @@
 
 declare(strict_types=1);
 
-namespace App\Util;
+namespace App\Util\Shader;
 
-use App\Util\Shader\Type;
 use Phplrt\Contracts\Source\ReadableInterface;
 
-class Shader
+class Source
 {
     /**
      * @param Type $type

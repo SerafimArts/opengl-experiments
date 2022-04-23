@@ -11,9 +11,10 @@ declare(strict_types=1);
 
 namespace App\Util;
 
-use App\Util\Shader\Compiled;
-use App\Util\Shader\Status;
 use App\Library\GL;
+use App\Util\Shader\Compiled;
+use App\Util\Shader\Source;
+use App\Util\Shader\Status;
 use FFI\Proxy\Registry;
 
 final class ShaderProgram
@@ -29,25 +30,31 @@ final class ShaderProgram
     public readonly int $id;
 
     /**
-     * @param list<Shader> $shaders
+     * @var array<Source>
+     */
+    public readonly array $shaders;
+
+    /**
+     * @param list<Source> $sources
      * @param GL|null $gl
      */
     public function __construct(
-        public readonly array $shaders,
+        iterable $sources,
         ?GL $gl = null,
     ) {
         $this->gl = $gl ?? Registry::get(GL::class);
+        $this->shaders = [...$sources];
 
         $this->id = $this->link(
-            $this->compile($shaders)
+            $this->compile($this->shaders)
         );
     }
 
     /**
-     * @param Shader $shader
+     * @param Source $shader
      * @return $this
      */
-    public function with(Shader $shader): self
+    public function with(Source $shader): self
     {
         return new self([...$this->shaders, $shader], $this->gl);
     }
@@ -80,7 +87,7 @@ final class ShaderProgram
     }
 
     /**
-     * @param list<Shader> $shaders
+     * @param list<Source> $shaders
      * @return list<Compiled>
      */
     private function compile(array $shaders): array

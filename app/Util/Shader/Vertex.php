@@ -11,11 +11,10 @@ declare(strict_types=1);
 
 namespace App\Util\Shader;
 
-use App\Util\Shader;
 use Phplrt\Contracts\Source\ReadableInterface;
 use Phplrt\Source\File;
 
-final class Vertex extends Shader
+final class Vertex extends Source
 {
     /**
      * @param ReadableInterface $source

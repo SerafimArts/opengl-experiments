@@ -13,11 +13,9 @@ namespace App\Util\Shader;
 
 
 use App\Exception\ShaderException;
-use App\Util\Shader;
 use App\Library\GL;
 use FFI\CData;
 use FFI\Scalar\Type as CType;
-use Phplrt\Contracts\Source\FileInterface;
 
 /**
  * @internal This is an internal library class, please do not use it in your code.
@@ -38,7 +36,7 @@ final class Compiled
     /**
      * @param GL $gl
      * @param int $type
-     * @param non-empty-list<Shader> $shaders
+     * @param non-empty-list<Source> $shaders
      */
     public function __construct(
         private readonly GL $gl,
@@ -60,7 +58,7 @@ final class Compiled
     }
 
     /**
-     * @param non-empty-list<Shader> $shaders
+     * @param non-empty-list<Source> $shaders
      * @return CData
      */
     private function shadersToArray(array $shaders): CData

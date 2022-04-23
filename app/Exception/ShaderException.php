@@ -11,9 +11,8 @@ declare(strict_types=1);
 
 namespace App\Exception;
 
-use App\Util\Shader;
+use App\Util\Shader\Source;
 use Phplrt\Contracts\Source\FileInterface;
-use Phplrt\Position\Position;
 
 class ShaderException extends \ParseError
 {
@@ -41,7 +40,7 @@ class ShaderException extends \ParseError
 
     /**
      * @param ShaderException $e
-     * @param array<int, Shader> $shaders
+     * @param array<int, Source> $shaders
      * @return static
      */
     public static function decorate(ShaderException $e, array $shaders): self

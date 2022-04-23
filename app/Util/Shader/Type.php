@@ -11,9 +11,6 @@ declare(strict_types=1);
 
 namespace App\Util\Shader;
 
-use App\Util\Shader;
-use App\Library\GL;
-
 /**
  * Note: Using GL::XXX_SHADER class constants is not possible due to
  *       {@see https://github.com/php/php-src/issues/8418} error.
