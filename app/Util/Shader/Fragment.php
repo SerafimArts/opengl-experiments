@@ -9,20 +9,20 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Shader;
+namespace App\Util\Shader;
 
-use App\Kernel\Shader;
+use App\Util\Shader;
 use Phplrt\Contracts\Source\ReadableInterface;
 use Phplrt\Source\File;
 
-final class Vertex extends Shader
+final class Fragment extends Shader
 {
     /**
      * @param ReadableInterface $source
      */
     public function __construct(ReadableInterface $source)
     {
-        parent::__construct(Type::VERTEX, $source);
+        parent::__construct(Type::FRAGMENT, $source);
     }
 
     /**

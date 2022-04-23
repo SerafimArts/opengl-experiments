@@ -9,10 +9,10 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel;
+namespace App\Util;
 
-use App\Kernel\Shader\Compiled;
-use App\Kernel\Shader\Status;
+use App\Util\Shader\Compiled;
+use App\Util\Shader\Status;
 use App\Library\GL;
 use FFI\Proxy\Registry;
 

@@ -9,9 +9,9 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel;
+namespace App\Util;
 
-use App\Kernel\Shader\Type;
+use App\Util\Shader\Type;
 use Phplrt\Contracts\Source\ReadableInterface;
 
 class Shader

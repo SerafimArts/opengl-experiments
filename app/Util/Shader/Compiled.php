@@ -9,13 +9,15 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Shader;
+namespace App\Util\Shader;
 
 
-use App\Kernel\Shader;
+use App\Exception\ShaderException;
+use App\Util\Shader;
 use App\Library\GL;
 use FFI\CData;
 use FFI\Scalar\Type as CType;
+use Phplrt\Contracts\Source\FileInterface;
 
 /**
  * @internal This is an internal library class, please do not use it in your code.
@@ -49,8 +51,12 @@ final class Compiled
         $gl->glShaderSource($this->id, \count($shaders), \FFI::addr($memory[0]), null);
         $gl->glCompileShader($this->id);
 
-        $compilation = Status::COMPILE;
-        $compilation->validateOrFail($this->gl, $this->id);
+        try {
+            $compilation = Status::COMPILE;
+            $compilation->validateOrFail($this->gl, $this->id);
+        } catch (ShaderException $e) {
+            throw ShaderException::decorate($e, $this->shaders);
+        }
     }
 
     /**

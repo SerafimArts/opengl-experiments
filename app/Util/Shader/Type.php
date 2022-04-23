@@ -9,9 +9,9 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Shader;
+namespace App\Util\Shader;
 
-use App\Kernel\Shader;
+use App\Util\Shader;
 use App\Library\GL;
 
 /**

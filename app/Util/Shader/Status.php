@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace App\Kernel\Shader;
+namespace App\Util\Shader;
 
 use App\Exception\ShaderException;
 use App\Library\GL;

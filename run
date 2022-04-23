@@ -10,9 +10,9 @@
 
 declare(strict_types=1);
 
-use App\Kernel\Shader\Fragment;
-use App\Kernel\Shader\Vertex;
-use App\Kernel\ShaderProgram;
+use App\Util\Shader\Fragment;
+use App\Util\Shader\Vertex;
+use App\Util\ShaderProgram;
 use App\Library\GL;
 use App\Library\GLFW3;
 use FFI\Proxy\Registry;
@@ -61,7 +61,6 @@ $output->writeln('Version: <comment>' . $gl->glGetString(GL::VERSION) . '</comme
 
 // build and compile our shader program
 // ------------------------------------
-
 $shader = new ShaderProgram([
     Vertex::fromPathname(__DIR__ . '/resources/shaders/vertex.vert'),
     Fragment::fromPathname(__DIR__ . '/resources/shaders/fragment.frag'),
