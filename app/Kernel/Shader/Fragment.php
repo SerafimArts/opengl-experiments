@@ -12,22 +12,26 @@ declare(strict_types=1);
 namespace App\Kernel\Shader;
 
 use App\Kernel\Shader;
+use Phplrt\Contracts\Source\ReadableInterface;
+use Phplrt\Source\File;
 
 final class Fragment extends Shader
 {
     /**
-     * @param string $source
+     * @param ReadableInterface $source
      */
-    public function __construct(string $source)
+    public function __construct(ReadableInterface $source)
     {
         parent::__construct(Type::FRAGMENT, $source);
     }
 
     /**
-     * {@inheritDoc}
+     * @psalm-taint-sink file $file
+     * @param non-empty-string $file
+     * @return static
      */
     public static function fromPathname(string $file): static
     {
-        return new self(\file_get_contents($file));
+        return new self(File::fromPathname($file));
     }
 }

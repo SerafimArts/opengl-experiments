@@ -7,6 +7,8 @@
         "ffi/location": "^1.0",
         "ffi/scalar-utils": "^1.0",
         "vlucas/phpdotenv": "^5.4",
+        "phplrt/source": "^3.2",
+        "phplrt/position": "^3.2",
         "symfony/console": "^5.4|^6.0"
     },
     "autoload": {
@@ -16,7 +18,7 @@
     },
     "require-dev": {
         "phing/phing": "^3.0",
-        "vimeo/psalm": "^4.22",
+        "symfony/var-dumper": "^5.4|^6.0",
         "ffi-headers/glfw3-headers": "^1.0",
         "ffi-headers/opengl-headers": "^1.0"
     },

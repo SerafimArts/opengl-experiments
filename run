@@ -10,8 +10,11 @@
 
 declare(strict_types=1);
 
-use App\Library\GLFW3;
+use App\Kernel\Shader\Fragment;
+use App\Kernel\Shader\Vertex;
+use App\Kernel\ShaderProgram;
 use App\Library\GL;
+use App\Library\GLFW3;
 use FFI\Proxy\Registry;
 use FFI\Scalar\Type;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -22,35 +25,12 @@ $gl = Registry::get(GL::class);
 $glfw = Registry::get(GLFW3::class);
 $output = new ConsoleOutput();
 
-\App\Kernel\Shader\Vertex::fromPathname(__FILE__);
-
 // ====================
 const WIDTH  = 640;
 const HEIGHT = 480;
-const MSAA   = 4;
+const MSAA   = 1024;
 const VSYNC  = false;
 // ====================
-
-$vertexShaderSource = Type::stringArray([<<<'GLSL'
-#version 330 core
-
-layout (location = 0) in vec3 aPos;
-
-void main() {
-   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-}
-GLSL]);
-
-$fragmentShaderSource = Type::stringArray([<<<'GLSL'
-#version 330 core
-
-out vec4 FragColor;
-
-void main() {
-   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-}
-GLSL]);
-
 
 $glfw->glfwSetErrorCallback(static function (int $code, string $message) use ($output) {
     $output->writeln(\sprintf('<error>[0x%h] %s</error>', $code, $message));
@@ -82,44 +62,10 @@ $output->writeln('Version: <comment>' . $gl->glGetString(GL::VERSION) . '</comme
 // build and compile our shader program
 // ------------------------------------
 
-// vertex shader
-$vertexShader = $gl->glCreateShader(GL::VERTEX_SHADER);
-$gl->glShaderSource($vertexShader, 1, FFI::addr($vertexShaderSource[0]), null);
-$gl->glCompileShader($vertexShader);
-// check for shader compile errors
-$success = Type::int();
-$gl->glGetShaderiv($vertexShader, GL::COMPILE_STATUS, FFI::addr($success));
-if (!$success->cdata) {
-    $gl->glGetShaderInfoLog($vertexShader, 512, null, $message = FFI::new('char[512]'));
-    throw new \LogicException(FFI::string($message));
-}
-
-// fragment shader
-$fragmentShader = $gl->glCreateShader(GL::FRAGMENT_SHADER);
-$gl->glShaderSource($fragmentShader, 1, FFI::addr($fragmentShaderSource[0]), null);
-$gl->glCompileShader($fragmentShader);
-// check for shader compile errors
-$gl->glGetShaderiv($fragmentShader, GL::COMPILE_STATUS, FFI::addr($success));
-if (!$success->cdata) {
-    $gl->glGetShaderInfoLog($fragmentShader, 512, null, $message = FFI::new('char[512]'));
-    throw new \LogicException(FFI::string($message));
-}
-
-// link shaders
-$shaderProgram = $gl->glCreateProgram();
-$gl->glAttachShader($shaderProgram, $vertexShader);
-$gl->glAttachShader($shaderProgram, $fragmentShader);
-$gl->glLinkProgram($shaderProgram);
-
-// check for linking errors
-$gl->glGetShaderiv($shaderProgram, GL::LINK_STATUS, FFI::addr($success));
-if (!$success->cdata) {
-    $gl->glGetShaderInfoLog($shaderProgram, 512, null, $message = FFI::new('char[512]'));
-    throw new \LogicException(FFI::string($message));
-}
-
-$gl->glDeleteShader($vertexShader);
-$gl->glDeleteShader($fragmentShader);
+$shader = new ShaderProgram([
+    Vertex::fromPathname(__DIR__ . '/resources/shaders/vertex.vert'),
+    Fragment::fromPathname(__DIR__ . '/resources/shaders/fragment.frag'),
+]);
 
 // set up vertex data (and buffer(s)) and configure vertex attributes
 // ------------------------------------------------------------------
@@ -192,7 +138,7 @@ while (!$glfw->glfwWindowShouldClose($window)) {
     $gl->glClear(GL::COLOR_BUFFER_BIT);
 
     // draw our first triangle
-    $gl->glUseProgram($shaderProgram);
+    $shader->use();
     $gl->glBindVertexArray($vao->cdata); // seeing as we only have a single VAO
                                          // there's no need to bind it every time,
                                          // but we'll do so to keep things a bit
@@ -212,7 +158,6 @@ while (!$glfw->glfwWindowShouldClose($window)) {
 $gl->glDeleteVertexArrays(1, FFI::addr($vao));
 $gl->glDeleteBuffers(1, FFI::addr($vbo));
 $gl->glDeleteBuffers(1, FFI::addr($ebo));
-$gl->glDeleteProgram($shaderProgram);
 
 // glfw: terminate, clearing all previously allocated GLFW resources.
 // ------------------------------------------------------------------

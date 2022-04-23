@@ -12,23 +12,17 @@ declare(strict_types=1);
 namespace App\Kernel;
 
 use App\Kernel\Shader\Type;
+use Phplrt\Contracts\Source\ReadableInterface;
 
-abstract class Shader
+class Shader
 {
     /**
      * @param Type $type
-     * @param string $source
+     * @param ReadableInterface $source
      */
     public function __construct(
         public readonly Type $type,
-        public readonly string $source,
+        public readonly ReadableInterface $source,
     ) {
     }
-
-    /**
-     * @psalm-taint-sink file $file
-     * @param non-empty-string $file
-     * @return static
-     */
-    abstract public static function fromPathname(string $file): static;
 }
